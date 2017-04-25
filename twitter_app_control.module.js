@@ -15,6 +15,7 @@ var TwitterAppControl = function TwitterAppControl(casperOptions){
 };
 
 TwitterAppControl.prototype.login = function login() {
+
   var credentials = {
     'email': casper.cli.get(0),
     'username': casper.cli.get(1),
@@ -73,7 +74,8 @@ TwitterAppControl.prototype.createApp = function createApp(){
         'access_token': null,
         'access_token_secret': null,
         'consumer_key': null,
-        'consumer_key_secret': null
+        'consumer_key_secret': null,
+        'owner_id': null
       };
 
       var appName = accountName + Math.floor((Math.random() * 100) + 1).toString() + ' test';
@@ -143,6 +145,11 @@ TwitterAppControl.prototype.createApp = function createApp(){
               return $('.app-settings .row span:nth-child(2)').get(1).innerText;
           });
           this.echo(saveableCredentials.consumer_key_secret);
+
+          saveableCredentials.owner_id = this.evaluate(function(){
+              return $("#gaz-content-body > div.d-block.d-block-system.g-main > div > div.app-settings > div:nth-child(5) > span:nth-child(2)").get(0).innerText;
+          });
+          this.echo(saveableCredentials.owner_id);
 
           if(self.saveNewAppCredentials(saveableCredentials)){
             this.echo('Application tokens saved to file successfully!');
@@ -218,11 +225,9 @@ TwitterAppControl.prototype.updateSettings = function updateSettings(){
           }, credentials.password);
 
           this.fillSelectors('#account-form', {
-              '#user_country': 'us',
-              '#user_lang': 'en',
-              '#user_time_zone': 'Pacific Time (US & Canada)',
-              '#user_nsfw_view': true,
-              '#user_nsfw_user': false,
+              '#user_country': 'fr',
+              '#user_lang': 'fr',
+              '#user_time_zone': 'London',
               // '#show_tweet_translations': false
           }, true);
 
@@ -257,20 +262,8 @@ TwitterAppControl.prototype.saveNewAppCredentials = function saveNewAppCredentia
     // return false;
   // }
 
-  var output_file = fs.workingDirectory + '/output.json';
-  casper.echo('Writing output to file ('+output_file+')...');
 
-  var existing_output = fs.read(output_file);
-  if(existing_output == ''){
-    existing_output = [];
-  }
-  else{
-    existing_output = JSON.parse(existing_output);
-  }
-
-  existing_output.push(saveableCredentials);
-
-  fs.write('output.json', JSON.stringify(existing_output), 'w');
+  fs.write('results/' + saveableCredentials.account_name +  '.json', JSON.stringify(saveableCredentials, null, 4), 'w');
 
   phantom.exit();
 
